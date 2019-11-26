@@ -1,14 +1,3 @@
-var port = chrome.runtime.connect();
-
-window.addEventListener('message', (event) => {
-    if (event.source == window && event.data.type) {
-        console.log("Content script received: " + event.data.type);
-        port.postMessage(event.data.type);
-    }
-});
-
-
-
 const parser = new DOMParser();
 const BASE_URL = "https://github.com";
 const EMPTY_SYMBOL = "∅";
@@ -32,12 +21,6 @@ const nodeMap = rows.reduce((acc, curr) => {
     acc[hashCode(curr)] = curr;
     return acc;
 }, {});
-
-const createLineElement = (data) => {
-    return `<td class="line-number">
-<span style="color: ${GITHUB_GRAY}" class="css-truncate css-truncate-target">${data}</span>
-</td>`;
-};
 
 const getLinks = (dom) => {
     const navItems = iterableQuerySelectorAll(dom, "tr .content a");
@@ -124,63 +107,86 @@ pairs.forEach(pair => {
         .catch(err => console.error(err));
 });
 
-const displayEmoji = (type) => (length) => {
+const displayText = (type, data) => {
+    let length;
     switch (type) {
         case 'DIR':
-            return 📁;
+            length = data.nums.dirNum;
+            return length > 1 ? `${length} Dirs` : `${length} Dir`;
         case 'FILE':
-            return 📄;
+            length = data.nums.fileNum;
+            return length > 1 ? `${length} Files` : `${length} File`;
         case 'LINE':
-            return 📜;
+            length = data.lines
+            return length > 1 ? `${length} Lines` : `${length} Line`;
         default:
             return '';
     }
 }
 
-const displayText = (type) => (length) => {
-    switch (type) {
-        case 'DIR':
-            return length > 1 ? 'Dirs' : 'Dir';
-        case 'FILE':
-            return length > 1 ? 'Files' : 'File';
-        case 'LINE':
-            return length > 1 ? 'Lines' : 'Line';
-        default:
-            return '';
+
+const addTextElement = (data, visible) => {
+    return `<span style="color: ${GITHUB_GRAY}; ${visible ? '' : 'display: none'};" class="github-line-text css-truncate css-truncate-target"> ${data}</span>`;
+};
+
+const addEmojiElement = (data, visible) => {
+    return `<td class="github-line-emoji"><span style="color: ${GITHUB_GRAY}; ${visible ? '' : 'display: none'};" class="css-truncate css-truncate-target">${data}</span></td>`;
+};
+
+const inject = (type, pair, visible) => {
+    const { row, data } = pair;
+    if (type === 'TEXT') {
+        const adjacentCell = row.children[1];
+        const input = createInput(type, row, data);
+        const lineEl = addTextElement(input, visible);
+        adjacentCell.insertAdjacentHTML('beforeend', lineEl);
+    } else {
+        const adjacentCell = row.lastElementChild;
+        const input = createInput(type, row, data);
+        const lineEl = addEmojiElement(input, visible);
+        adjacentCell.insertAdjacentHTML('beforebegin', lineEl);
     }
 }
 
 const createInput = (type, row, data) => {
     if (type === 'TEXT') {
-        const input = isDir(row) ? `📁${data.nums.dirNum}  |  📄${data.nums.fileNum}` : ` ✒️ ${data.lines} lines`;
+        return isDir(row)
+            ? `(${displayText('DIR', data)} / ${displayText('FILE', data)})`
+            : `(${displayText('LINE', data)})`;
     } else {
-
+        return isDir(row)
+            ? `📁 (${data.nums.dirNum})  |  📄 (${data.nums.fileNum})`
+            : `📜 ${data.lines} Lines`;
     }
-    const input = isDir(row) ? `📁${data.nums.dirNum}  |  📄${data.nums.fileNum}` : ` ✒️ ${data.lines} lines`;
-
-}
-const inject = (type) => (pair) => {
-    const { row, data } = pair;
-    const adjacentCell = type === 'TEXT'
-        ? row.children[1].firstElementChild
-        : row.lastElementChild;
-    const input = createInput(type, row, data)
-    const lineEl = createLineElement(input);
-    adjacentCell.insertAdjacentHTML("beforebegin", lineEl);
 }
 
-const selectedCell = row.children[1].firstElementChild;
-// const input = isDir(row) ? `📁 ${data.nums.dirNum}  | 📄 ${data.nums.fileNum} ` : `✒️ ${data.lines} Lines`;
-const input = isDir(row) ? `(${data.nums.dirNum} Dirs / ${data.nums.fileNum} Files)` : `(${data.lines} Lines)`;
-const lineEl = createLineElement(input);
+const textSelector = '.github-line-text';
+const emojiSelector = '.github-line-emoji span'
+const toggleAll = (selector) => {
+    document.querySelectorAll(selector).forEach(
+        el => el.style.display === 'none'
+            ? el.style.display = ''
+            : el.style.display = 'none'
+    )
+}
 
-
-const appendLineElements = (type, dataPairs) => {
+const appendElement = (type, dataPairs, visible) => {
     dataPairs.forEach(pair => {
-        inject(type)(pair)
+        inject(type, pair, visible)
     });
 };
 
-setTimeout(() => {
-    appendLineElements('text', dataPairs);
+const render = (type, dataPairs, visible) => setTimeout(() => {
+    appendElement(type, dataPairs, visible);
 }, LOAD_TIMEOUT);
+
+render('TEXT', dataPairs, true);
+render('EMOJI', dataPairs, false);
+
+chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
+    if (req.action === 'TOGGLE') {
+        toggleAll(textSelector);
+        toggleAll(emojiSelector);
+        sendResponse({ action: 'DONE' });
+    }
+});
