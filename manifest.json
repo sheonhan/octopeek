@@ -1,0 +1,33 @@
+{
+  "name": "GitHub Line Numers",
+  "manifest_version": 2,
+  "version": "1.0.0",
+  "browser_action": {
+    "default_icon": "lines.png"
+  },
+  "description": "Display the number of lines in each file.",
+  "icons": {},
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "page_action": {
+    "default_popup": "options.html"
+  },
+  "permissions": ["activeTab", "declarativeContent", "storage"],
+  "persistent": false,
+  "content_scripts": [
+    {
+      "matches": ["*://github.com/*"],
+      "exclude_matches": [
+        "*://*/*issues*",
+        "*://*/*pulls*",
+        "*://*/*actions*",
+        "*://*/*projects*",
+        "*://*/*network*",
+        "*://*/*settings*",
+        "*://*/*search*"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}
