@@ -33,6 +33,10 @@ module.exports = {
             {
                 from: 'numbers.png',
                 to: 'numbers.png'
+            },
+            {
+                from: 'popup.html',
+                to: 'popup.html'
             }
         ])
     ]
