@@ -13,6 +13,8 @@
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "eslint": "^6.7.0"
+    "eslint": "^6.7.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
   }
 }
