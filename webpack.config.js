@@ -29,6 +29,10 @@ module.exports = {
             {
                 from: 'manifest.json',
                 to: 'manifest.json'
+            },
+            {
+                from: 'numbers.png',
+                to: 'numbers.png'
             }
         ])
     ]
