@@ -1,14 +1,15 @@
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 
 module.exports = {
     mode: 'production',
     entry: {
         popup: path.join(__dirname, 'popup.ts'),
-        background: path.join(__dirname, + 'background.ts'),
-        content_script: path.join(__dirname, 'content.ts')
+        background: path.join(__dirname, 'background.ts'),
+        content: path.join(__dirname, 'content.ts')
     },
     output: {
-        path: path.join(__dirname, '../dist/js'),
+        path: path.join(__dirname, 'dist'),
         filename: '[name].js'
     },
     module: {
@@ -22,5 +23,13 @@ module.exports = {
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js']
-    }
+    },
+    plugins: [
+        new CopyWebpackPlugin([
+            {
+                from: 'manifest.json',
+                to: 'manifest.json'
+            }
+        ])
+    ]
 };

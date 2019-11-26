@@ -3,7 +3,6 @@
         "target": "es6",
         "allowJs": true,
         "module": "commonjs",
-        "strictNullChecks": true,
         "inlineSourceMap": true,
         "sourceMap": false,
         "outDir": "./dist",
