@@ -2,15 +2,15 @@
     "name": "GitHub Line Numers",
     "manifest_version": 2,
     "version": "1.0.0",
-    "description": "Display the number of lines in each file.",
-    "icons": {},
+    "description": "Display some useful numbers.",
+    "icons": { "16": "numbers.png", "48": "numbers.png", "128": "numbers.png" },
     "background": {
         "scripts": ["background.js"],
         "persistent": false
     },
     "page_action": {
         "default_popup": "popup.html",
-        "default_icon": "lines.png"
+        "default_icon": "numbers.png"
     },
     "permissions": ["activeTab", "declarativeContent", "storage"],
     "content_scripts": [
