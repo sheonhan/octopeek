@@ -4,9 +4,9 @@ const path = require('path');
 module.exports = {
     mode: 'production',
     entry: {
-        popup: path.join(__dirname, 'popup.ts'),
-        background: path.join(__dirname, 'background.ts'),
-        content: path.join(__dirname, 'content.ts')
+        popup: path.join(__dirname, 'src', 'popup.ts'),
+        background: path.join(__dirname, 'src', 'background.ts'),
+        content: path.join(__dirname, 'src', 'content.ts')
     },
     output: {
         path: path.join(__dirname, 'dist'),
@@ -35,7 +35,7 @@ module.exports = {
                 to: 'numbers.png'
             },
             {
-                from: 'popup.html',
+                from: 'src/popup.html',
                 to: 'popup.html'
             }
         ])

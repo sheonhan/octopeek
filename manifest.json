@@ -12,7 +12,13 @@
         "default_popup": "popup.html",
         "default_icon": "numbers.png"
     },
-    "permissions": ["activeTab", "declarativeContent", "storage"],
+    "permissions": [
+        "activeTab",
+        "declarativeContent",
+        "storage",
+        "tabs",
+        "webNavigation"
+    ],
     "content_scripts": [
         {
             "matches": ["*://github.com/*"],
@@ -25,8 +31,8 @@
                 "*://*/*settings*",
                 "*://*/*search*"
             ],
-            "js": ["content.js"]
+            "js": ["content.js"],
+            "run_at": "document_idle"
         }
-    ],
-    "content_security_policy": "script-src 'self' https://github.com; object-src 'self' 'sha256-5w+AEMmtAruRkAXhsQXKLpGs9ZxjhTnWs84y4sTESEM='"
+    ]
 }

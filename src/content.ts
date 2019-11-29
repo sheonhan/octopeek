@@ -41,7 +41,19 @@ const hashCode = (el: Element) =>
         .split("")
         .reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
 
-const rows = iterableQuerySelectorAll(document, "tr.js-navigation-item");
+const isType = (regex: RegExp) => (el: Element) => !!el.innerHTML.match(regex);
+
+const isDir = (el: Element) =>
+    isType(/aria-label="directory"/)(el) ||
+    isType(/aria-label="submodule"/)(el);
+
+const isFile = isType(/aria-label="file"/);
+
+const isSkippable = isType(/title="Go to parent directory"/);
+
+const rows = iterableQuerySelectorAll(document, "tr.js-navigation-item").filter(
+    el => !isSkippable(el)
+);
 
 const nodeMap: NodeMap = rows.reduce((acc, curr) => {
     acc[hashCode(curr)] = curr;
@@ -56,14 +68,6 @@ const getLinks = (dom: Document) => {
 const domIsFile = (dom: Document) => !!dom.querySelector("h2#blob-path");
 
 const domIsSymlink = (dom: Document) => dom.querySelector(".file-mode");
-
-const isType = (regex: RegExp) => (el: Element) => !!el.innerHTML.match(regex);
-
-const isFile = isType(/aria-label="file"/);
-
-const isDir = (el: Element) =>
-    isType(/aria-label="directory"/)(el) ||
-    isType(/aria-label="submodule"/)(el);
 
 const hasLines = (dom: Document) => !!dom.querySelector(`.file-info-divider`);
 
@@ -117,29 +121,6 @@ const getInfo = (innerDom: Document): Data => {
     }
 };
 
-const links = getLinks(document);
-const fullLinks = links.map(link => `${BASE_URL}${link}`);
-const pairs = zip(rows, fullLinks);
-
-interface DataPair {
-    row: Element;
-    data: Data;
-}
-
-let dataPairs: DataPair[] = [];
-pairs.forEach((pair: Row) => {
-    const { row, link } = pair;
-    fetch(link)
-        .then(res => res.text())
-        .then(html => parser.parseFromString(html, "text/html"))
-        .then(innerDom => {
-            const data = getInfo(innerDom);
-            const key = hashCode(row);
-            dataPairs.push({ row: nodeMap[key], data: data });
-        })
-        .catch(err => console.error(err));
-});
-
 const displayText = (type: string, data) => {
     let length: number;
     switch (type) {
@@ -167,6 +148,43 @@ const addEmojiElement = (data: string, visible: boolean) => {
     return `<td class="github-line-emoji"><span style="color: ${GITHUB_GRAY}; ${
         visible ? "" : "display: none"
     };" class="css-truncate css-truncate-target">${data}</span></td>`;
+};
+
+interface DataPair {
+    row: Element;
+    data: Data;
+}
+
+const fetchData = async (dom: Document) => {
+    // let dataPairs: DataPair[] = [];
+    const links = getLinks(dom);
+    const fullLinks = links.map(link => `${BASE_URL}${link}`);
+    const pairs = zip(rows, fullLinks);
+
+    const promises = pairs.map(async pair => {
+        const { row, link } = pair;
+        const response = await fetch(link);
+        const text = await response.text();
+        const innerDom = parser.parseFromString(text, "text/html");
+        const data = getInfo(innerDom);
+        const key = hashCode(row);
+        return { row: nodeMap[key], data: data };
+    });
+
+    // pairs.forEach((pair: Row) => {
+    //     const { row, link } = pair;
+    //     fetch(link)
+    //         .then(res => res.text())
+    //         .then(html => parser.parseFromString(html, "text/html"))
+    //         .then(innerDom => {
+    //             const data = getInfo(innerDom);
+    //             const key = hashCode(row);
+    //             dataPairs.push({ row: nodeMap[key], data: data });
+    //         })
+    //         .catch(err => console.error(err));
+    // });
+
+    return await Promise.all(promises);
 };
 
 const inject = (type: string, pair: DataPair, visible: boolean) => {
@@ -208,23 +226,31 @@ const toggleAll = selector => {
         );
 };
 
-const appendElement = (type: string, dataPairs: DataPair[], visible: boolean) =>
+const render = (type: string, dataPairs: DataPair[], visible: boolean) =>
     dataPairs.forEach(pair => {
         inject(type, pair, visible);
     });
 
-const render = (type: string, dataPairs: DataPair[], visible: boolean) =>
-    setTimeout(() => {
-        appendElement(type, dataPairs, visible);
-    }, LOAD_TIMEOUT);
+// alert("error");
+const init = async () => {
+    const dataPairs = await fetchData(document);
+    const storage = chrome.storage.sync || chrome.storage.local;
+    storage.get("toggle", data => {
+        const toggleState = data.toggle;
+        alert(`content: INIT with ${toggleState}`);
+        render("TEXT", dataPairs, !toggleState);
+        render("EMOJI", dataPairs, toggleState);
+    });
+};
 
-render("TEXT", dataPairs, true);
-render("EMOJI", dataPairs, false);
+document.addEventListener("pjax:end", async () => {
+    await init();
+});
 
-chrome.runtime.onMessage.addListener((req, _, sendResponse) => {
-    if (req.action === "TOGGLE") {
+chrome.runtime.onMessage.addListener(async (req, _sender, sendResponse) => {
+    if (req.toggle) {
         toggleAll(textSelector);
         toggleAll(emojiSelector);
-        sendResponse({ action: "DONE" });
+        alert("content: rerendered");
     }
 });
