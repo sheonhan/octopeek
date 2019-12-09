@@ -1,49 +1,47 @@
+// Initialize storage
 chrome.runtime.onInstalled.addListener(() => {
-    const storage = chrome.storage.sync || chrome.storage.local;
-    chrome.storage.sync.get("toggle", data => {
-        if (data.toggle === undefined) {
-            storage.set({ toggle: false }, () => {});
-        }
+    chrome.storage.sync.set({ textIcon: true });
+
+    chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
+        chrome.declarativeContent.onPageChanged.addRules([
+            {
+                actions: [new chrome.declarativeContent.ShowPageAction()],
+                conditions: [
+                    new chrome.declarativeContent.PageStateMatcher({
+                        pageUrl: { hostEquals: "github.com" },
+                    }),
+                ],
+            },
+        ]);
     });
 });
 
-chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
-    chrome.declarativeContent.onPageChanged.addRules([
-        {
-            conditions: [
-                new chrome.declarativeContent.PageStateMatcher({
-                    pageUrl: { hostEquals: "github.com" }
-                })
-            ],
-            actions: [new chrome.declarativeContent.ShowPageAction()]
-        }
-    ]);
+// Change pageAction icon
+chrome.pageAction.onClicked.addListener((info) => {
+    chrome.storage.sync.get(null, (data) => {
+        const newOption = !data.textIcon;
+        const fileName = newOption ? "text" : "emoji";
+        chrome.storage.sync.set({ textIcon: newOption });
+
+        // Pass messge to content.ts
+        chrome.tabs.query({ active: true, currentWindow: true }, (_) => {
+            chrome.tabs.sendMessage(info.id, { action: "TOGGLE" });
+        });
+
+        // Set to new icon
+        chrome.pageAction.setIcon({
+            path: `${fileName}.png`,
+            tabId: info.id,
+        });
+    });
 });
 
-// const sendInitMessage = (tabId: number) => {};
-
-// chrome.webNavigation.onHistoryStateUpdated.addListener(
-//     ({ tabId }) => {
-//         console.log(`History update: ${JSON.stringify(tabId)}`);
-//         try {
-//             chrome.tabs.sendMessage(tabId, { message: "INIT" });
-//         } catch (e) {
-//             console.log(`error ${JSON.stringify(e)}`);
-//         }
-//     },
-//     { url: [{ hostEquals: "github.com" }] }
-// );
-// chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-//     if (tab.active && changeInfo.status === "complete") {
-//         console.info(
-//             `tabId ${tabId} updated: ${JSON.stringify(
-//                 changeInfo
-//             )} tab ${JSON.stringify(tab)}`
-//         );
-//         try {
-//             sendInitMessage(tabId);
-//         } catch (error) {
-//             console.error(error);
-//         }
-//     }
-// });
+chrome.webNavigation.onHistoryStateUpdated.addListener((info) => {
+    chrome.storage.sync.get(null, (data) => {
+        const fileName = data.textIcon ? "text" : "emoji";
+        chrome.pageAction.setIcon({
+            path: `${fileName}.png`,
+            tabId: info.tabId,
+        });
+    });
+});

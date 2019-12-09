@@ -9,8 +9,7 @@
         "persistent": false
     },
     "page_action": {
-        "default_popup": "popup.html",
-        "default_icon": "numbers.png"
+        "default_icon": "text.png"
     },
     "permissions": [
         "activeTab",
@@ -19,9 +18,10 @@
         "tabs",
         "webNavigation"
     ],
+    "web_accessible_resources": ["content.css"],
     "content_scripts": [
         {
-            "matches": ["*://github.com/*"],
+            "matches": ["https://github.com/*"],
             "exclude_matches": [
                 "*://*/*issues*",
                 "*://*/*pulls*",
@@ -32,7 +32,7 @@
                 "*://*/*search*"
             ],
             "js": ["content.js"],
-            "run_at": "document_idle"
+            "run_at": "document_end"
         }
     ]
 }
