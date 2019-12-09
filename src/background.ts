@@ -1,6 +1,6 @@
 // Initialize storage
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.storage.sync.set({ textIcon: true });
+    chrome.storage.sync.set({ textIcon: false });
 
     chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
         chrome.declarativeContent.onPageChanged.addRules([
