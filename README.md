@@ -1,4 +1,4 @@
-# 🖱️ GitHub-Peek: Save yourself useless clicks when navigating GitHub 👀
+# 👀 Octopeek: Save yourself useless clicks 🖱️ when navigating GitHub
 [![Build Status](https://travis-ci.org/sheonhan/github-numbers.svg?branch=master)](https://travis-ci.org/sheonhan/github-numbers)
 
 ## Usage
