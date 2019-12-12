@@ -1,5 +1,5 @@
 # 👀 Octopeek: Save yourself useless clicks 🖱️ when navigating GitHub
-[![Build Status](https://travis-ci.org/sheonhan/github-numbers.svg?branch=master)](https://travis-ci.org/sheonhan/github-numbers) ![](https://img.shields.io/badge/version-v1.0.0-blueviolet)
+[![Build Status](https://travis-ci.org/sheonhan/octopeek.svg?branch=master)](https://travis-ci.org/sheonhan/octopeek) ![](https://img.shields.io/badge/version-v1.0.0-blueviolet)
 
 ## Usage
 
