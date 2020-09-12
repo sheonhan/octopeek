@@ -12,7 +12,7 @@
         "@types/chrome": "0.0.91",
         "@types/node": "^12.12.14",
         "jsdom": "^15.2.1",
-        "node-fetch": "^2.6.0"
+        "node-fetch": "^2.6.1"
     },
     "devDependencies": {
         "copy-webpack-plugin": "^5.0.5",
